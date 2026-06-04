@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Smart Outlet App</title>
+    
+    <style>
+        /* RESET & BASE STYLES */
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            background-color: #f4f6f9;
+            color: #333333;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        /* MOBILE CONTAINER (Eksakto sa lapad ng Samsung A15) */
+        .app-container {
+            width: 100%;
+            max-width: 430px; 
+            background-color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        /* --- LOGIN SCREEN STYLES --- */
+        #login-screen {
+            display: flex; /* Default is flex, will be hidden via JS later */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            height: 100vh;
+            background: #ffffff;
+            width: 100%;
+            max-width: 430px;
+            position: absolute;
+            z-index: 100;
+        }
+
+        .login-logo {
+            background: #4B55E5;
+            color: white;
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 20px;
+        }
+
+        #login-screen h2 {
+            margin-bottom: 5px;
+            font-size: 24px;
+        }
+
+        #login-screen p {
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .input-group {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 15px;
+            background-color: #f8fafc;
+            outline: none;
+        }
+
+        .input-group input:focus {
+            border-color: #4B55E5;
+            background-color: #fff;
+        }
+
+        .btn-login {
+            width: 100%;
+            background-color: #4B55E5;
+            color: white;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(75, 85, 229, 0.2);
+        }
+
+        .error-msg {
+            color: #ef4444;
+            font-size: 13px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        /* --- DASHBOARD STYLES --- */
+        #dashboard-screen {
+            display: none; /* Nakatago muna hangga't di naka-login */
+            flex-direction: column;
+            height: 100vh;
+            width: 100%;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4B55E5, #363FA3);
+            color: white;
+            padding: 35px 25px;
+            border-bottom-left-radius: 24px;
+            border-bottom-right-radius: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(75, 85, 229, 0.3);
+        }
+
+        .header-title h1 {
+            font-size: 36px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            line-height: 1;
+        }
+
+        .header-title p {
+            font-size: 15px;
+            opacity: 0.9;
+            margin-top: 5px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .header-badges {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: flex-end;
+        }
+
+        .badge {
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            backdrop-filter: blur(5px);
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            background-color: #22c55e;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px #22c55e;
+        }
+
+        .content {
+            padding: 25px;
+            flex-grow: 1;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #888888;
+            margin: 20px 0 10px 0;
+        }
+
+        .readings-card {
+            background-color: #ffffff;
+            border: 1px solid #eef2f5;
+            border-radius: 16px;
+            padding: 5px 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        }
+
+        .reading-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 5px;
+            border-bottom: 1px solid #f4f6f9;
+        }
+
+        .reading-row:last-child {
+            border-bottom: none;
+        }
+
+        .reading-label {
+            font-size: 17px;
+            color: #444444;
+            font-weight: 500;
+        }
+
+        .reading-value {
+            font-size: 19px;
+            font-weight: 700;
+            color: #4B55E5;
+        }
+
+        .controls-container {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 18px;
+            font-size: 16px;
+            font-weight: 700;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            outline: none;
+        }
+
+        .btn-on {
+            background-color: #4B55E5;
+            color: white;
+            border: none;
+            box-shadow: 0 4px 12px rgba(75, 85, 229, 0.2);
+        }
+
+        .btn-on:active {
+            background-color: #363FA3;
+            transform: scale(0.98);
+        }
+
+        .btn-off {
+            background-color: #ffffff;
+            color: #333333;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn-off:active {
+            background-color: #f8fafc;
+            transform: scale(0.98);
+        }
+
+        /* --- OVERLOAD MODAL --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85); 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            padding: 20px;
+            visibility: hidden; 
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .modal-box {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 360px;
+            border-radius: 20px;
+            padding: 30px 25px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            border: 3px solid #ef4444; 
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+            70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        /* BAGO: Format ng text na ni-request mo */
+        .modal-box h2 {
+            color: #ef4444;
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .modal-box p {
+            font-size: 15px;
+            color: #4b5563;
+            line-height: 1.5;
+            margin-bottom: 25px;
+            font-weight: 500;
+        }
+
+        .btn-confirm {
+            background-color: #ef4444;
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-confirm:active {
+            background-color: #dc2626;
+        }
+    </style>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <div id="login-screen">
+            <div class="login-logo">SO</div>
+            <h2>Welcome back</h2>
+            <p>Sign in to your account to continue</p>
+
+            <div class="input-group">
+                <label>Email address</label>
+                <input type="email" id="email-input" placeholder="admin@smartoutlet.com">
+            </div>
+
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="password-input" placeholder="Enter password">
+            </div>
+
+            <div class="error-msg" id="login-error">Invalid email or password!</div>
+
+            <button class="btn-login" onclick="handleLogin()">Log in</button>
+        </div>
+
+        <div id="dashboard-screen">
+            <div class="header">
+                <div class="header-title">
+                    <h1>SO</h1>
+                    <p>Smart outlet</p>
+                </div>
+                <div class="header-badges">
+                    <div class="badge"><span class="dot" id="status-dot"></span> <span id="status-text">Online</span></div>
+                    <div class="badge">Firebase Live</div>
+                </div>
+            </div>
+            
+            <div class="content">
+                <div class="section-title">Readings</div>
+                
+                <div class="readings-card">
+                    <div class="reading-row">
+                        <span class="reading-label">Voltage</span>
+                        <span class="reading-value" id="val-voltage">-- V</span>
+                    </div>
+                    <div class="reading-row">
+                        <span class="reading-label">Current</span>
+                        <span class="reading-value" id="val-current">-- A</span>
+                    </div>
+                    <div class="reading-row">
+                        <span class="reading-label">Power</span>
+                        <span class="reading-value" id="val-power">-- W</span>
+                    </div>
+                    <div class="reading-row">
+                        <span class="reading-label">Energy</span>
+                        <span class="reading-value" id="val-energy">-- kWh</span>
+                    </div>
+                    <div class="reading-row">
+                        <span class="reading-label">Temperature</span>
+                        <span class="reading-value" id="val-temperature">-- °C</span>
+                    </div>
+                </div>
+
+                <div class="section-title">Control</div>
+                <div class="controls-container">
+                    <button class="btn btn-on" onclick="turnOn()">Power on</button>
+                    <button class="btn btn-off" onclick="turnOff()">Power off</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="modal-overlay" id="overload-modal">
+        <div class="modal-box">
+            <h2>SYSTEM TRIPPED!!</h2>
+            <p>Your device is already tripped please unplug some appliences to reduce load.</p>
+            <button class="btn-confirm" onclick="confirmReduction()">OK</button>
+        </div>
+    </div>
+
+    <script>
+        // --- LOGIN LOGIC ---
+        function handleLogin() {
+            const email = document.getElementById('email-input').value;
+            const pass = document.getElementById('password-input').value;
+            const errorMsg = document.getElementById('login-error');
+
+            // Default credentials base sa screenshot mo kanina
+            if (email === 'admin@smartoutlet.com' && pass === 'smartoutlet') {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('dashboard-screen').style.display = 'flex';
+                errorMsg.style.display = 'none';
+            } else {
+                errorMsg.style.display = 'block';
+            }
+        }
+
+        // --- FIREBASE CONFIGURATION ---
+        const firebaseConfig = {
+            databaseURL: "https://smartoutlet-g95ysb-default-rtdb.asia-southeast1.firebasedatabase.app"
+        };
+        
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.database();
+
+        // --- READINGS LISTENER ---
+        db.ref('readings/voltage').on('value', (snapshot) => {
+            document.getElementById('val-voltage').innerText = (snapshot.val() !== null ? snapshot.val() : '--') + ' V';
+        });
+        
+        db.ref('readings/current').on('value', (snapshot) => {
+            document.getElementById('val-current').innerText = (snapshot.val() !== null ? snapshot.val() : '--') + ' A';
+        });
+
+        db.ref('readings/power').on('value', (snapshot) => {
+            document.getElementById('val-power').innerText = (snapshot.val() !== null ? snapshot.val() : '--') + ' W';
+        });
+
+        db.ref('readings/energy').on('value', (snapshot) => {
+            document.getElementById('val-energy').innerText = (snapshot.val() !== null ? snapshot.val() : '--') + ' kWh';
+        });
+
+        db.ref('readings/temperature').on('value', (snapshot) => {
+            document.getElementById('val-temperature').innerText = (snapshot.val() !== null ? snapshot.val() : '--') + ' °C';
+        });
+
+        // --- STATUS & ONLINE/OFFLINE LOGIC ---
+        let isTrippedState = false;
+        let isRelayOn = false;
+
+        function updateUIStatus() {
+            const statusDot = document.getElementById('status-dot');
+            const statusText = document.getElementById('status-text');
+            const overloadModal = document.getElementById('overload-modal');
+
+            if (isTrippedState) {
+                // Priority ang Tripped status
+                overloadModal.classList.add('show');
+                statusDot.style.backgroundColor = '#ef4444'; // Red
+                statusDot.style.boxShadow = '0 0 8px #ef4444';
+                statusText.innerText = 'Overloaded!';
+            } else {
+                overloadModal.classList.remove('show');
+                
+                // Kapag hindi tripped, mag-dedepend sa Power ON o OFF
+                if (isRelayOn) {
+                    statusDot.style.backgroundColor = '#22c55e'; // Green
+                    statusDot.style.boxShadow = '0 0 8px #22c55e';
+                    statusText.innerText = 'Online';
+                } else {
+                    statusDot.style.backgroundColor = '#9ca3af'; // Gray
+                    statusDot.style.boxShadow = 'none';
+                    statusText.innerText = 'Offline';
+                }
+            }
+        }
+
+        // Listener para sa is_tripped
+        db.ref('status/is_tripped').on('value', (snapshot) => {
+            isTrippedState = snapshot.val() === true;
+            updateUIStatus();
+        });
+
+        // Listener para sa relay_status (ito ang mag-c-control ng Online/Offline text)
+        db.ref('controls/relay_status').on('value', (snapshot) => {
+            isRelayOn = snapshot.val() === true;
+            updateUIStatus();
+        });
+
+        // --- BUTTON ACTIONS ---
+        function confirmReduction() {
+            // Pag pinindot ang OK button sa modal
+            db.ref('status/is_tripped').set(false);
+        }
+
+        function turnOn() {
+            db.ref('controls/relay_status').set(true);
+        }
+
+        function turnOff() {
+            db.ref('controls/relay_status').set(false);
+        }
+    </script>
+</body>
+</html>
